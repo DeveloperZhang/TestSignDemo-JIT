@@ -1,0 +1,6 @@
+framework module JITMiddleWareSDK {
+  umbrella header "JITMiddleWareSDK.h"
+
+  export *
+  module * { export * }
+}

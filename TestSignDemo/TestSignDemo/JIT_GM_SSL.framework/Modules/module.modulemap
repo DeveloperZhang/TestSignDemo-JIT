@@ -1,0 +1,6 @@
+framework module JIT_GM_SSL {
+  umbrella header "JIT_GM_SSL.h"
+
+  export *
+  module * { export * }
+}

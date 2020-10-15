@@ -1,0 +1,15 @@
+//
+//  PrefixHeader.pch
+//  TestSignDemo
+//
+//  Created by ZhangYu on 2020/10/13.
+//  Copyright © 2020 JIT. All rights reserved.
+//
+
+#ifndef PrefixHeader_pch
+#define PrefixHeader_pch
+
+#import "JITDefault.h"
+
+
+#endif /* PrefixHeader_pch */
