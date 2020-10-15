@@ -21,7 +21,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString *p10Base64String;     //p10
 @property (nonatomic, strong) NSString *pkCerBase64String;   //公钥证书
 @property (nonatomic, strong) NSString *p7bBase64String;     //p7b
-//@property (nonatomic, strong) NSString *snString;            //证书序列号
+@property (nonatomic, strong) NSData *signSrcData;           //签名原数据
+@property (nonatomic, strong) NSString *signedData;          //签名后数据
+@property (nonatomic, strong) NSString *snString;            //证书序列号唯一标识
 
 @end
 

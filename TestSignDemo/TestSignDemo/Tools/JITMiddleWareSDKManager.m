@@ -21,23 +21,23 @@ static NSString *const kBaseUrl = @"https://39.105.231.49:8015/";
         //不能再使用alloc方法
         //因为已经重写了allocWithZone方法，所以这里要调用父类的分配空间的方法
         _sharedSingleton = [[super allocWithZone:NULL] init];
-        [_sharedSingleton configSDK];
     });
     return _sharedSingleton;
 }
 
 
 
-- (void)configSDK {
+- (void)configCerType:(CERT_TYPE_YQY)certType {
 //    [JITMiddleWareSDKManager sharedSingleton].jitMCTK = [[JITMiddleWareSDK alloc] initWithCertStorageLocation:CERT_STORAGE_LOCATION_SANDBOX andIP:nil andPort:nil andSafeModelPath:nil];
     //密码模块密码必须为Aa111111
     self.jitMCTK = [[JITMiddleWareSDK alloc] initWithCertStorageLocation:CERT_STORAGE_LOCATION_SAFEMODEL andIP:nil andPort:nil andSafeModelPath:nil];
+    self.certType = certType;
 }
 
 
 - (BOOL)createP10WithCertCN:(NSString *)strCN
                andP10Base64:(NSString *_Nullable*_Nullable)strP10Base64 {
-    int ret = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK createP10WithCertCN:strCN andCertType:CERT_TYPE_MCTK_RSA andKeyLength:@"2048" andPassword:@"Aa111111" andP10Base64:strP10Base64];
+    int ret = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK createP10WithCertCN:strCN andCertType:(CERT_TYPE_MCTK)self.certType andKeyLength:@"2048" andPassword:@"Aa111111" andP10Base64:strP10Base64];
     if (ret == 0) {//成功
         return YES;
     }
@@ -104,5 +104,34 @@ static NSString *const kBaseUrl = @"https://39.105.231.49:8015/";
         NSLog(@"生成成功");
     }];
 }
+
+
+- (BOOL)saveCertWithCertSN:(NSString *)strCertSN andP7b:(NSString *)strP7b {
+    NSString *certType;
+    if ([JITMiddleWareSDKManager sharedSingleton].certType == CERT_TYPE_YQY_RSA) {
+        certType = @"RSA";
+    }else {
+        certType = @"SM2";
+    }
+    int ret = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK saveCertWithCertType:certType
+           andCertPassword:@"Aa111111"
+                 andCertSN:strCertSN
+                    andP7b:strP7b
+           andDoubleCertSN:@""
+              andDoubleP7b:@""
+    andDoubleEncSessionKey:@""
+          andSessionKeyAlg:@""
+       andDleEncPrivateKey:@""];
+    NSLog(@"保存证书:%@",ret==0?@"成功":@"失败");
+    if (ret == 0) {
+        [[YQYMBProgressHUDManager sharedSingleton] showHudWithText:@"保存成功" callBack:^{
+            
+        } delayHideSecond:1.];
+        return YES;
+    }
+    return NO;
+}
+
+
 
 @end

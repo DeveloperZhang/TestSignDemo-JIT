@@ -11,11 +11,27 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+// 证书类型
+typedef enum {
+    CERT_TYPE_YQY_RSA,     // RSA证书
+    CERT_TYPE_YQY_SM2     // 国密证书
+} CERT_TYPE_YQY;
+
 @interface JITMiddleWareSDKManager : NSObject
 
 @property (strong, nonatomic) JITMiddleWareSDK *jitMCTK;
+@property (nonatomic, assign) CERT_TYPE_YQY certType;
 
 + (instancetype)sharedSingleton;
+
+/**
+* 配置证书类型
+* @author  Zhang Yu
+* @param   certType 证书类型
+* @remarks 备注 无
+*/
+- (void)configCerType:(CERT_TYPE_YQY)certType;
 
 /**
  * 产生P10数据
@@ -46,6 +62,16 @@ NS_ASSUME_NONNULL_BEGIN
 *  @remarks 备注 无
 */
 - (void)generateP7bInfo:(NSString *)cerString successBlock:(void(^)(id  _Nullable responseObject))successBlock;
+
+/**
+ * 保存证书（p7b）
+ * @author  Zhang Yu
+ * @param   strCertSN          单证书序列号
+ * @param   strP7b             单证书P7b
+ * @remarks 备注
+ * @return  返回值 YES:成功 NO:失败
+ */
+- (BOOL)saveCertWithCertSN:(NSString *)strCertSN andP7b:(NSString *)strP7b;
 
 @end
 

@@ -31,6 +31,8 @@ static NSString *const kBaseUrl = @"https://39.105.231.49:8015/";
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    JITMiddleWareSDKManager *sdkManager = [JITMiddleWareSDKManager sharedSingleton];
+    [sdkManager configCerType:CERT_TYPE_YQY_RSA];
     self.cerModel = [YQYCerModel new];
     NSLog(@"111");
 }
@@ -75,9 +77,9 @@ static NSString *const kBaseUrl = @"https://39.105.231.49:8015/";
             break;
         case 1: {//申请证书公钥和序列号
             [[JITMiddleWareSDKManager sharedSingleton] applyCertInfo:self.cerModel.p10Base64String successBlock:^(id  _Nullable responseObject) {
-                //cert,sn
+                //cert
                 self.cerModel.pkCerBase64String = responseObject[@"cert"];
-//                self.cerModel.snString = responseObject[@"sn"];
+                self.cerModel.snString = responseObject[@"sn"];
                 NSLog(@"");
             }];
         }
@@ -90,49 +92,43 @@ static NSString *const kBaseUrl = @"https://39.105.231.49:8015/";
         }
             break;
         case 3: {//保存证书
-            int ret = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK saveCertWithCertType:@"RSA"
-                                                     andCertPassword:@"Aa111111"
-                                                           andCertSN:self.cerModel.pkCerBase64String
-                                                              andP7b:self.cerModel.p7bBase64String
-                                                     andDoubleCertSN:@""
-                                                        andDoubleP7b:@""
-                                              andDoubleEncSessionKey:@""
-                                                    andSessionKeyAlg:@""
-                                                 andDleEncPrivateKey:@""];
-            NSLog(@"保存证书:%@",ret==0?@"成功":@"失败");
+            BOOL result = [[JITMiddleWareSDKManager sharedSingleton] saveCertWithCertSN:self.cerModel.pkCerBase64String andP7b:self.cerModel.p7bBase64String];
+            NSLog(@"保存证书:%@",result==YES?@"成功":@"失败");
         }
             break;
         case 4: {//设置证书和摘要算法
             //获取证书列表
             NSArray *array = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK GetCertList];
             [[JITMiddleWareSDKManager sharedSingleton].jitMCTK SetCert:[array lastObject][@"UniqueID"] password:@"Aa111111"];
-            [[JITMiddleWareSDKManager sharedSingleton].jitMCTK SetDigestAlg:@"SHA1"];
+            if ([JITMiddleWareSDKManager sharedSingleton].certType == CERT_TYPE_YQY_RSA) {
+                [[JITMiddleWareSDKManager sharedSingleton].jitMCTK SetDigestAlg:@"SHA1"];
+            }
         }
             break;
         case 5: {//签名
             NSData *srcData = [@"123" dataUsingEncoding:NSUTF8StringEncoding];
+            self.cerModel.signSrcData = srcData;
             NSString *resultStr = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK P1Sign:srcData];
+            self.cerModel.signedData = resultStr;
             NSLog(@"resultStr:%@",resultStr);
         }
             break;
         case 6:{//验签
-//            NSString *strPCert = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK getSignCertPublicKeyCertBase64];
-            NSData *srcData = [@"123" dataUsingEncoding:NSUTF8StringEncoding];
-            int state = (int)[[JITMiddleWareSDKManager sharedSingleton].jitMCTK VerifyP1Sign:srcData publicKeyCertBase64:@"MIIC9zCCAd+gAwIBAgIQWphVq9XlBs2MWHrRTTMwPjANBgkqhkiG9w0BAQsFADA2MQswCQYDVQQGEwJDTjENMAsGA1UEChMEU1hDQTEYMBYGA1UEAxMPU2VjdXJpdHlSc2EyMDQ4MB4XDTIwMTAxMzA4MjgwMVoXDTIxMDExMzA4MjgwMVowWzELMAkGA1UEBhMCQ04xCjAIBgNVBAgTAS0xCjAIBgNVBAcTAS0xHTAbBgNVBAsTFDEwMTAxMDEwMTAxMDEwMTAxMDEwMRUwEwYDVQQDDAzmtYvor5Xlhazlj7gwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAK4szHOa5m4/h/woh7sLg+0MhLlKCAK9YCr9ZNpc4JwAYOp/43+vskkxwwi9RRCBpd5xWHFbiJcXyBB4lHokEwa8iBTQyEcZ38jwSKKyZcbMFUoD5VfipTr8LiUz+a21rrOZ5CDayTnQkcBEfV80aiDU+fw4+sn4GGtTcpekG81pAgMBAAGjYDBeMA4GA1UdDwEB/wQEAwIDyDAdBgNVHQ4EFgQUJekf8g2888m1i3QuSEFlmNHodMUwDAYDVR0TBAUwAwEBADAfBgNVHSMEGDAWgBQFyVcieNtXVquLhKwK696TEtU+mDANBgkqhkiG9w0BAQsFAAOCAQEAHxFo98gUxl9eRCrWe/ISj8GqSQcl7sGXnfNbZlAun6ssMPqxSzwknt7aSQIAzsNdqsK7i5h9CVJ857E5mgbwZhP99/kGjFnKTvIgjoOwwZcXtWla6JlbMnEzVt9VM8zGlRRVdhj1LDDr1z1DEgcCdBlNErzLJW4YZqpd4QFvRFXHRnxAMA+ffujEvUyETo8z7EyN0k/ppNtb8W5xiWYGARMe/ekHgqbab6ENVCjbfIZ+ohJZsW3f2UjpEEAF3gJeOf1qGh/f4Pj8goSsNsr9yG2Q+gusp+xgkA54F8Y4Gd8DDYzcPobRPAZHfPPAcjtSmoA38VTMYFMnmuw/6sdmvA==" SignDataBase64:@"dVEl4Ucz8+1TwN9555p761HdFbvNLRWmmwnjgaEjsY++F7J9AfDlZiyyXRrpc/wERQclsI7D+UKspKZqsMJ0K4NEbt2h1Sy2RQXFfBKRIdNF9oFyL/SWQvR1iB97VRGwwgrvGMUxJ/+Lav6XFLPXOlWqYeyHXAIQ8gqQEUqb+aA="];
+            int state = (int)[[JITMiddleWareSDKManager sharedSingleton].jitMCTK VerifyP1Sign:self.cerModel.signSrcData publicKeyCertBase64:self.cerModel.pkCerBase64String SignDataBase64:self.cerModel.signedData];
             NSLog(@"验签结果:%d",state);
 
         }
             break;
         case 7: {//p7签名
             NSData *srcData = [@"123" dataUsingEncoding:NSUTF8StringEncoding];
+            self.cerModel.signSrcData = srcData;
             NSString *resultStr = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK DetachSign:srcData];
+            self.cerModel.signedData = resultStr;
             NSLog(@"resultStr:%@",resultStr);
         }
             break;
         case 8: {//p7验签
-//            NSString *strPCert = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK getSignCertPublicKeyCertBase64];
-            NSData *srcData = [@"123" dataUsingEncoding:NSUTF8StringEncoding];
-            int state = (int)[[JITMiddleWareSDKManager sharedSingleton].jitMCTK VerifyDetachSign:srcData SignData:@"MIIEGwYJKoZIhvcNAQcCoIIEDDCCBAgCAQExCTAHBgUrDgMCGjALBgkqhkiG9w0BBwGgggL7MIIC9zCCAd+gAwIBAgIQWphVq9XlBs2MWHrRTTMwPjANBgkqhkiG9w0BAQsFADA2MQswCQYDVQQGEwJDTjENMAsGA1UEChMEU1hDQTEYMBYGA1UEAxMPU2VjdXJpdHlSc2EyMDQ4MB4XDTIwMTAxMzA4MjgwMVoXDTIxMDExMzA4MjgwMVowWzELMAkGA1UEBhMCQ04xCjAIBgNVBAgTAS0xCjAIBgNVBAcTAS0xHTAbBgNVBAsTFDEwMTAxMDEwMTAxMDEwMTAxMDEwMRUwEwYDVQQDDAzmtYvor5Xlhazlj7gwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAK4szHOa5m4/h/woh7sLg+0MhLlKCAK9YCr9ZNpc4JwAYOp/43+vskkxwwi9RRCBpd5xWHFbiJcXyBB4lHokEwa8iBTQyEcZ38jwSKKyZcbMFUoD5VfipTr8LiUz+a21rrOZ5CDayTnQkcBEfV80aiDU+fw4+sn4GGtTcpekG81pAgMBAAGjYDBeMA4GA1UdDwEB/wQEAwIDyDAdBgNVHQ4EFgQUJekf8g2888m1i3QuSEFlmNHodMUwDAYDVR0TBAUwAwEBADAfBgNVHSMEGDAWgBQFyVcieNtXVquLhKwK696TEtU+mDANBgkqhkiG9w0BAQsFAAOCAQEAHxFo98gUxl9eRCrWe/ISj8GqSQcl7sGXnfNbZlAun6ssMPqxSzwknt7aSQIAzsNdqsK7i5h9CVJ857E5mgbwZhP99/kGjFnKTvIgjoOwwZcXtWla6JlbMnEzVt9VM8zGlRRVdhj1LDDr1z1DEgcCdBlNErzLJW4YZqpd4QFvRFXHRnxAMA+ffujEvUyETo8z7EyN0k/ppNtb8W5xiWYGARMe/ekHgqbab6ENVCjbfIZ+ohJZsW3f2UjpEEAF3gJeOf1qGh/f4Pj8goSsNsr9yG2Q+gusp+xgkA54F8Y4Gd8DDYzcPobRPAZHfPPAcjtSmoA38VTMYFMnmuw/6sdmvDGB6zCB6AIBATBKMDYxCzAJBgNVBAYTAkNOMQ0wCwYDVQQKEwRTWENBMRgwFgYDVQQDEw9TZWN1cml0eVJzYTIwNDgCEFqYVavV5QbNjFh60U0zMD4wBwYFKw4DAhowCwYJKoZIhvcNAQEBBIGAdVEl4Ucz8+1TwN9555p761HdFbvNLRWmmwnjgaEjsY++F7J9AfDlZiyyXRrpc/wERQclsI7D+UKspKZqsMJ0K4NEbt2h1Sy2RQXFfBKRIdNF9oFyL/SWQvR1iB97VRGwwgrvGMUxJ/+Lav6XFLPXOlWqYeyHXAIQ8gqQEUqb+aA="];
+            int state = (int)[[JITMiddleWareSDKManager sharedSingleton].jitMCTK VerifyDetachSign:self.cerModel.signSrcData SignData:self.cerModel.signedData];
             NSLog(@"验签结果:%d",state);
         }
             break;
