@@ -73,6 +73,50 @@ typedef enum {
  */
 - (BOOL)saveCertWithCertSN:(NSString *)strCertSN andP7b:(NSString *)strP7b;
 
+/*
+ *  @brief 设置证书算法摘要
+ *  @author  Zhang Yu
+ *  @remarks 备注 无
+ * @return  返回值 YES:设置成功
+ */
+- (BOOL)configDigestAlg;
+
+/**
+* P1签名
+* @author  Zhang Yu
+* @param   srcStr 签名原文
+* @return  返回值  签名结果Base64
+*/
+- (NSString *)p1SignWithData:(NSString *)srcStr;
+
+/**
+ * P1验签名
+ * @author  Zhang Yu
+ * @param   srcStr                签名原文
+ * @param   strPublicKeyCertBase64  验签名的公钥证书Base64
+ * @param   strSignDataBase64       签名结果
+ * @return  返回值 YES:验签成功
+ */
+- (BOOL)verifyP1Sign:(NSString *)srcStr publicKeyCertBase64:(NSString *)strPublicKeyCertBase64 signDataBase64:(NSString *)strSignDataBase64;
+
+/**
+* P7签名
+* @author  Zhang Yu
+* @param   srcStr 签名原文
+* @return  返回值    p1签名结果Base64
+*/
+- (NSString *)p7SignWithData:(NSString *)srcStr;
+
+/**
+* P7验签名
+* @author  Zhang Yu
+* @param   srcStr                签名原文
+* @param   strSignDataBase64       签名结果
+* @return  返回值 YES:验签成功
+*/
+- (BOOL)verifyP7Sign:(NSString *)srcStr signDataBase64:(NSString *)strSignDataBase64;
+
+
 @end
 
 NS_ASSUME_NONNULL_END

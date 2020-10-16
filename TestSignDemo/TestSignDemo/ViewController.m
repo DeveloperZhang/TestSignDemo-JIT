@@ -93,43 +93,59 @@ static NSString *const kBaseUrl = @"https://39.105.231.49:8015/";
             break;
         case 3: {//保存证书
             BOOL result = [[JITMiddleWareSDKManager sharedSingleton] saveCertWithCertSN:self.cerModel.pkCerBase64String andP7b:self.cerModel.p7bBase64String];
-            NSLog(@"保存证书:%@",result==YES?@"成功":@"失败");
+            NSString *resultStr = [NSString stringWithFormat:@"保存证书:%@",result==YES?@"成功":@"失败"];
+            NSLog(@"%@", resultStr);
+            [[YQYMBProgressHUDManager sharedSingleton] showHudWithText:resultStr callBack:^{
+                
+            } delayHideSecond:1.];
         }
             break;
         case 4: {//设置证书和摘要算法
-            //获取证书列表
-            NSArray *array = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK GetCertList];
-            [[JITMiddleWareSDKManager sharedSingleton].jitMCTK SetCert:[array lastObject][@"UniqueID"] password:@"Aa111111"];
-            if ([JITMiddleWareSDKManager sharedSingleton].certType == CERT_TYPE_YQY_RSA) {
-                [[JITMiddleWareSDKManager sharedSingleton].jitMCTK SetDigestAlg:@"SHA1"];
-            }
+            BOOL result = [[JITMiddleWareSDKManager sharedSingleton] configDigestAlg];
+            NSString *resultStr = [NSString stringWithFormat:@"设置证书%@",result==YES ? @"成功" : @"失败"];
+            [[YQYMBProgressHUDManager sharedSingleton] showHudWithText:resultStr callBack:^{
+                
+            } delayHideSecond:1.];
         }
             break;
         case 5: {//签名
-            NSData *srcData = [@"123" dataUsingEncoding:NSUTF8StringEncoding];
-            self.cerModel.signSrcData = srcData;
-            NSString *resultStr = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK P1Sign:srcData];
+            self.cerModel.signSrcStr = @"123";
+            NSString *resultStr = [[JITMiddleWareSDKManager sharedSingleton] p1SignWithData:self.cerModel.signSrcStr];
             self.cerModel.signedData = resultStr;
-            NSLog(@"resultStr:%@",resultStr);
+            NSString *resultString = [NSString stringWithFormat:@"签名%@",![NSString isBlankString:resultStr] ? @"成功" : @"失败"];
+            [[YQYMBProgressHUDManager sharedSingleton] showHudWithText:resultString callBack:^{
+                
+            } delayHideSecond:1.];
         }
             break;
         case 6:{//验签
-            int state = (int)[[JITMiddleWareSDKManager sharedSingleton].jitMCTK VerifyP1Sign:self.cerModel.signSrcData publicKeyCertBase64:self.cerModel.pkCerBase64String SignDataBase64:self.cerModel.signedData];
-            NSLog(@"验签结果:%d",state);
-
+            BOOL result = [[JITMiddleWareSDKManager sharedSingleton] verifyP1Sign:@"123" publicKeyCertBase64:self.cerModel.pkCerBase64String signDataBase64:self.cerModel.signedData];
+            NSString *resultStr = [NSString stringWithFormat:@"验签结果:%@",result==YES ? @"成功" : @"失败"];
+            NSLog(@"%@", resultStr);
+            [[YQYMBProgressHUDManager sharedSingleton] showHudWithText:resultStr callBack:^{
+                
+            } delayHideSecond:1.];
         }
             break;
         case 7: {//p7签名
-            NSData *srcData = [@"123" dataUsingEncoding:NSUTF8StringEncoding];
-            self.cerModel.signSrcData = srcData;
-            NSString *resultStr = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK DetachSign:srcData];
+            
+            self.cerModel.signSrcStr = @"123";
+            NSString *resultStr = [[JITMiddleWareSDKManager sharedSingleton] p7SignWithData:self.cerModel.signSrcStr];
             self.cerModel.signedData = resultStr;
             NSLog(@"resultStr:%@",resultStr);
+            NSString *resultString = [NSString stringWithFormat:@"签名%@",![NSString isBlankString:resultStr] ? @"成功" : @"失败"];
+            [[YQYMBProgressHUDManager sharedSingleton] showHudWithText:resultString callBack:^{
+                
+            } delayHideSecond:1.];
         }
             break;
         case 8: {//p7验签
-            int state = (int)[[JITMiddleWareSDKManager sharedSingleton].jitMCTK VerifyDetachSign:self.cerModel.signSrcData SignData:self.cerModel.signedData];
-            NSLog(@"验签结果:%d",state);
+            BOOL result = [[JITMiddleWareSDKManager sharedSingleton] verifyP7Sign:@"123" signDataBase64:self.cerModel.signedData];
+            NSString *resultStr = [NSString stringWithFormat:@"验签结果:%@",result==YES ? @"成功" : @"失败"];
+            NSLog(@"%@", resultStr);
+            [[YQYMBProgressHUDManager sharedSingleton] showHudWithText:resultStr callBack:^{
+                
+            } delayHideSecond:1.];
         }
             break;
         case 9: {//网络请求

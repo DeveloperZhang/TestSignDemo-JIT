@@ -133,5 +133,53 @@ static NSString *const kBaseUrl = @"https://39.105.231.49:8015/";
 }
 
 
+- (BOOL)configDigestAlg {
+    //获取证书列表
+    NSArray *array = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK GetCertList];
+    if (array.count == 0) {
+        NSLog(@"无证书");
+        return NO;
+    }
+    int result = [[JITMiddleWareSDKManager sharedSingleton].jitMCTK SetCert:[array lastObject][@"UniqueID"] password:@"Aa111111"];
+    if (result != 0) {
+        NSLog(@"设置失败");
+        return NO;
+    }
+    if ([JITMiddleWareSDKManager sharedSingleton].certType == CERT_TYPE_YQY_RSA) {
+        [[JITMiddleWareSDKManager sharedSingleton].jitMCTK SetDigestAlg:@"SHA1"];
+    }
+    return YES;
+}
+
+- (NSString *)p1SignWithData:(NSString *)srcStr {
+    NSData *srcData = [srcStr dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *resultStr = [self.jitMCTK P1Sign:srcData];
+    return resultStr;
+}
+
+- (BOOL)verifyP1Sign:(NSString *)srcStr publicKeyCertBase64:(NSString *)strPublicKeyCertBase64 signDataBase64:(NSString *)strSignDataBase64 {
+    NSData *srcData = [srcStr dataUsingEncoding:NSUTF8StringEncoding];
+    int result = [self.jitMCTK VerifyP1Sign:srcData publicKeyCertBase64:strPublicKeyCertBase64 SignDataBase64:strSignDataBase64];
+    if (result == 0) {
+        return YES;
+    }
+    return NO;
+}
+
+- (NSString *)p7SignWithData:(NSString *)srcStr {
+    NSData *srcData = [srcStr dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *resultStr = [self.jitMCTK DetachSign:srcData];
+    return resultStr;
+}
+
+- (BOOL)verifyP7Sign:(NSString *)srcStr signDataBase64:(NSString *)strSignDataBase64 {
+    NSData *srcData = [srcStr dataUsingEncoding:NSUTF8StringEncoding];
+    int result = [self.jitMCTK VerifyDetachSign:srcData SignData:strSignDataBase64];
+    if (result == 0) {
+        return YES;
+    }
+    return NO;
+}
+
 
 @end
